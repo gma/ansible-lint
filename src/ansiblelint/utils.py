@@ -29,7 +29,7 @@ import os
 import re
 from collections.abc import Generator, ItemsView, Iterator, Mapping, Sequence
 from dataclasses import _MISSING_TYPE, dataclass, field
-from functools import cache
+from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +41,7 @@ from ansible.parsing.mod_args import ModuleArgsParser
 from ansible.parsing.yaml.constructor import AnsibleConstructor, AnsibleMapping
 from ansible.parsing.yaml.loader import AnsibleLoader
 from ansible.parsing.yaml.objects import AnsibleBaseYAMLObject, AnsibleSequence
-from ansible.plugins.loader import add_all_plugin_dirs
+from ansible.plugins.loader import PluginLoadContext, add_all_plugin_dirs, module_loader
 from ansible.template import Templar
 from ansible.utils.collection_loader import AnsibleCollectionConfig
 from yaml.composer import Composer
@@ -1026,3 +1026,21 @@ def _extend_with_roles(lintables: list[Lintable]) -> None:
 def convert_to_boolean(value: Any) -> bool:
     """Use Ansible to convert something to a boolean."""
     return bool(boolean(value))
+
+
+@lru_cache
+def load_plugin(name: str) -> PluginLoadContext:
+    """Return loaded ansible plugin/module."""
+    loaded_module = module_loader.find_plugin_with_context(
+        name,
+        ignore_deprecated=True,
+        check_aliases=True,
+    )
+    if not loaded_module.resolved and name.startswith("ansible.builtin."):
+        # fallback to core behavior of using legacy
+        loaded_module = module_loader.find_plugin_with_context(
+            name.replace("ansible.builtin.", "ansible.legacy."),
+            ignore_deprecated=True,
+            check_aliases=True,
+        )
+    return loaded_module

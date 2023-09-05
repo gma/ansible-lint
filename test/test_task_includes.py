@@ -9,7 +9,7 @@ from ansiblelint.runner import Runner
 @pytest.mark.parametrize(
     ("filename", "file_count", "match_count"),
     (
-        pytest.param("examples/playbooks/blockincludes.yml", 4, 3, id="blockincludes"),
+        pytest.param("examples/playbooks/blockincludes.yml", 4, 4, id="blockincludes"),
         pytest.param(
             "examples/playbooks/blockincludes2.yml",
             4,
