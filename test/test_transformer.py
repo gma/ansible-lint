@@ -93,6 +93,12 @@ def fixture_runner_result(
             id="jinja_spacing",
         ),
         pytest.param(
+            "examples/playbooks/transform-no-jinja-when.yml",
+            3,
+            True,
+            id="no_jinja_when",
+        ),
+        pytest.param(
             "examples/playbooks/vars/transform_nested_data.yml",
             3,
             True,
@@ -103,6 +109,18 @@ def fixture_runner_result(
             6,
             True,
             id="key_order_transform",
+        ),
+        pytest.param(
+            "examples/playbooks/transform-no-free-form.yml",
+            2,
+            True,
+            id="no_free_form_transform",
+        ),
+        pytest.param(
+            "examples/playbooks/transform-partial-become.yml",
+            4,
+            True,
+            id="partial_become",
         ),
     ),
 )
