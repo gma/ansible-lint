@@ -274,10 +274,20 @@ def main(argv: list[str] | None = None) -> int:
 
         if Version(ruamel_safe_version) > Version(ruamel_yaml_version_str):
             _logger.warning(
-                "We detected use of `--write` feature with a buggy ruamel-yaml %s library instead of >=%s, upgrade it before reporting any bugs like dropped comments.",
+                "We detected use of `--fix` feature with a buggy ruamel-yaml %s library instead of >=%s, upgrade it before reporting any bugs like dropped comments.",
                 ruamel_yaml_version_str,
                 ruamel_safe_version,
             )
+        acceptable_tags = {"all", "none", *rules.known_tags()}
+        unknown_tags = set(options.write_list).difference(acceptable_tags)
+
+        if unknown_tags:
+            _logger.error(
+                "Found invalid value(s) (%s) for --fix arguments, must be one of: %s",
+                ", ".join(unknown_tags),
+                ", ".join(acceptable_tags),
+            )
+            sys.exit(RC.INVALID_CONFIG)
         _do_transform(result, options)
 
     mark_as_success = True
