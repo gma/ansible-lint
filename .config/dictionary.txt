@@ -311,6 +311,7 @@ rulesdir
 rulesdirs
 ruleset
 runas
+ruyaml
 sarif
 scalarint
 schemafile

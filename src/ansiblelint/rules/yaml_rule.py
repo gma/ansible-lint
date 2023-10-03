@@ -188,7 +188,7 @@ if "pytest" in sys.modules:
             ),
             pytest.param(
                 "examples/yamllint/.github/workflows/ci.yml",
-                "yaml",
+                "github-workflow",
                 [],
                 id="rule-yaml-github-workflow",
             ),

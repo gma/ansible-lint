@@ -37,7 +37,10 @@ DEFAULT_KINDS = [
     # Do not sort this list, order matters.
     {"jinja2": "**/*.j2"},  # jinja2 templates are not always parsable as something else
     {"jinja2": "**/*.j2.*"},
-    {"yaml": ".github/**/*.{yaml,yml}"},  # github workflows
+    {
+        "github-workflow": "**/.github/workflows/*.{yaml,yml}",
+    },  # github workflows (YAML 1.2)
+    {"yaml": "**/.github/**/*.{yaml,yml}"},  # github related files
     {"text": "**/templates/**/*.*"},  # templates are likely not validable
     {"execution-environment": "**/execution-environment.yml"},
     {"ansible-lint-config": "**/.ansible-lint"},
@@ -92,6 +95,7 @@ BASE_KINDS = [
     {"text/rst": "**/*.rst"},  # https://en.wikipedia.org/wiki/ReStructuredText
     {"text/ini": "**/*.ini"},
     # YAML has no official IANA assignation
+    {"text/yaml1.2": "**/.github/workflows/*.{yaml,yml}"},
     {"text/yaml": "**/{.ansible-lint,.yamllint}"},
     {"text/yaml": "**/*.{yaml,yml}"},
     {"text/yaml": "**/.*.{yaml,yml}"},

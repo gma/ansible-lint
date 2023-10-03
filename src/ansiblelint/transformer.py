@@ -79,7 +79,7 @@ class Transformer:
         for file, matches in self.matches_per_file.items():
             # str() convinces mypy that "text/yaml" is a valid Literal.
             # Otherwise, it thinks base_kind is one of playbook, meta, tasks, ...
-            file_is_yaml = str(file.base_kind) == "text/yaml"
+            file_is_yaml = str(file.base_kind).startswith("text/yaml")
 
             try:
                 data: str = file.content
@@ -94,8 +94,11 @@ class Transformer:
                 # stores intermediate state during load which could affect loading
                 # any other files. (Based on suggestion from ruamel.yaml author)
                 yaml = FormattedYAML()
-
+                if file.base_kind == "text/yaml1.2":
+                    yaml._yaml_version_default = (1, 2)
+                    yaml._yaml_version = (1, 2)
                 ruamel_data = yaml.loads(data)
+
                 if not isinstance(ruamel_data, (CommentedMap, CommentedSeq)):
                     # This is an empty vars file or similar which loads as None.
                     # It is not safe to write this file or data-loss is likely.

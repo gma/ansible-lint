@@ -968,6 +968,7 @@ class FormattedYAML(YAML):
         """Dump YAML document to string (including its preamble_comment)."""
         preamble_comment: str | None = getattr(data, "preamble_comment", None)
         self._prevent_wrapping_flow_style(data)
+        self._yaml_version = (1, 2)
         with StringIO() as stream:
             if preamble_comment:
                 stream.write(preamble_comment)
@@ -1073,6 +1074,10 @@ class FormattedYAML(YAML):
 
         Make sure null list items don't end in a space.
         """
+        # remove YAML directive
+        if text.startswith("%YAML"):
+            text = text.split("\n", 1)[1]
+
         text = text.rstrip("\n") + "\n"
 
         lines = text.splitlines(keepends=True)

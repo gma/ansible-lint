@@ -33,6 +33,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+import ruamel.yaml.parser
 import yaml
 from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.module_utils.parsing.convert_bool import boolean
@@ -44,6 +45,7 @@ from ansible.parsing.yaml.objects import AnsibleBaseYAMLObject, AnsibleSequence
 from ansible.plugins.loader import add_all_plugin_dirs
 from ansible.template import Templar
 from ansible.utils.collection_loader import AnsibleCollectionConfig
+from ruamel.yaml.main import YAML
 from yaml.composer import Composer
 from yaml.representer import RepresenterError
 
@@ -885,26 +887,41 @@ def parse_yaml_linenumbers(
         return mapping
 
     try:
-        kwargs = {}
-        if "vault_password" in inspect.getfullargspec(AnsibleLoader.__init__).args:
-            kwargs["vault_password"] = DEFAULT_VAULT_PASSWORD
-        loader = AnsibleLoader(lintable.content, **kwargs)
-        loader.compose_node = compose_node
-        loader.construct_mapping = construct_mapping
-        # while Ansible only accepts single documents, we also need to load
-        # multi-documents, as we attempt to load any YAML file, not only
-        # Ansible managed ones.
-        while True:
-            data = loader.get_data()
-            if data is None:
-                break
-            result.append(data)
+        # Using Ansible loader for loading YAML file that are not owned by Ansible is risky as
+        # that uses pyyaml which is unable to load YAML 1.2 documents correctly.
+        # https://github.com/yaml/pyyaml/issues/116
+        if lintable.kind in ("yaml", "github-workflow"):
+            ruyaml = YAML()
+            ruyaml.allow_duplicate_keys = True  # compatibility with pyyaml
+            result = list(ruyaml.load_all(lintable.content))
+            # breakpoint()
+            # result.append(data)
+            lintable._guess_kind(  # noqa: SLF001
+                data=result,
+            )  # this might change file type from yaml to something else
+        if lintable.kind not in ("yaml", "github-workflow"):
+            result = []  # we need to reset result as we will be reloading the file
+            kwargs = {}
+            if "vault_password" in inspect.getfullargspec(AnsibleLoader.__init__).args:
+                kwargs["vault_password"] = DEFAULT_VAULT_PASSWORD
+            loader = AnsibleLoader(lintable.content, **kwargs)
+            loader.compose_node = compose_node
+            loader.construct_mapping = construct_mapping
+            # while Ansible only accepts single documents, we also need to load
+            # multi-documents, as we attempt to load any YAML file, not only
+            # Ansible managed ones.
+            while True:
+                data = loader.get_data()
+                if data is None:
+                    break
+                result.append(data)
     except (
         yaml.parser.ParserError,
         yaml.scanner.ScannerError,
         yaml.constructor.ConstructorError,
+        ruamel.yaml.parser.ParserError,
     ) as exc:
-        msg = "Failed to load YAML file"
+        msg = f"Failed to load YAML file: {lintable.path}"
         raise RuntimeError(msg) from exc
 
     if len(result) == 0:

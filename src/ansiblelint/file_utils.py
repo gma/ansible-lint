@@ -275,18 +275,20 @@ class Lintable:
         if hasattr(self, "file"):
             self.file.close()
 
-    def _guess_kind(self) -> None:
+    def _guess_kind(self, data: Any = None) -> None:
+        if data is None:
+            data = self.data
         if self.kind == "yaml":
             if (
-                isinstance(self.data, list)
-                and len(self.data) > 0
+                isinstance(data, list)
+                and len(data) > 0
                 and (
-                    "hosts" in self.data[0]
-                    or "import_playbook" in self.data[0]
-                    or "ansible.builtin.import_playbook" in self.data[0]
+                    "hosts" in data[0]
+                    or "import_playbook" in data[0]
+                    or "ansible.builtin.import_playbook" in data[0]
                 )
             ):
-                if "rules" not in self.data[0]:
+                if "rules" not in data[0]:
                     self.kind = "playbook"
                 else:
                     self.kind = "rulebook"
